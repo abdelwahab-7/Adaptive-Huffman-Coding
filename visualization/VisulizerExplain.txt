@@ -1,0 +1,56 @@
+# SwingHuffmanVisualizer Explanation
+
+## Overview
+The SwingHuffmanVisualizer is an interactive visualization tool for the Adaptive Huffman Coding algorithm. It provides a graphical user interface using Java Swing to demonstrate how the algorithm builds and updates a Huffman tree dynamically as text is encoded.
+
+## Core Functionality
+1. **Tree Visualization**: Renders the Huffman tree graphically, showing nodes, weights, paths, and edge labels (0/1 bits).
+2. **Step-by-Step Encoding**: Allows encoding text one character at a time to see how the tree evolves.
+3. **Animation**: Provides smooth animations when encoding symbols and when nodes are swapped to maintain the sibling property.
+4. **Statistics Display**: Shows encoding information, bit savings, and compression ratio.
+
+## Relationship with Source Code Classes
+The visualizer directly utilizes the core implementation classes from the `src` directory:
+
+1. **HuffmanTree**: The main data structure that manages the adaptive Huffman tree. The visualizer creates and maintains an instance of this class to:
+   - Add new symbols
+   - Update existing symbols
+   - Track node swaps
+   - Generate encodings
+
+2. **Node**: Used by the visualizer to represent and draw tree nodes. The visualizer accesses Node properties like:
+   - symbol
+   - weight
+   - parent/child relationships
+   - orderNumber
+
+## Key Differences from Other Visualizers
+1. **More Interactive** than ConsoleTreeVisualizer:
+   - Graphical UI vs text-based output
+   - Real-time tree updates
+   - Visual animations for node swaps
+   - Adjustable animation speed
+
+2. **More Features** than HuffmanTreeVisualizer (JavaFX version):
+   - Highlights encoding paths
+   - Shows node swaps with animations
+   - Provides more detailed statistics
+   - Offers a more complete explanation of the algorithm
+
+## Implementation Details
+- Uses a custom panel (HuffmanTreePanel) to render the tree
+- Implements animations using Swing Timer
+- Maintains a queue of animation steps
+- Color-codes nodes based on weight or special status (NYT, highlighted, swapped)
+- Calculates tree layout dynamically based on subtree widths
+
+## Usage
+The visualizer allows users to:
+1. Enter a string to encode
+2. Step through encoding one character at a time
+3. Automatically encode the entire string
+4. Reset the tree to start over
+5. Adjust animation speed
+6. See detailed encoding information and statistics
+
+The SwingHuffmanVisualizer is a valuable educational tool that helps visualize and understand the adaptive Huffman coding process through interactive exploration.

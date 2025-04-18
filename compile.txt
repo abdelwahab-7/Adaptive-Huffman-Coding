@@ -1,0 +1,21 @@
+# Compile all Java source files to build directory
+mkdir -p build
+javac -d build src/*.java
+
+# Compile and run simpletest
+javac -d build src/*.java test/SimpleAdaptiveHuffmanTest.java
+java -cp build SimpleAdaptiveHuffmanTest
+
+# Compile and run test
+javac -d build src/*.java test/AdaptiveHuffmanTest.java
+java -cp build AdaptiveHuffmanTest
+
+
+# Compile and run visualizer
+java -cp .:../src SwingHuffmanVisualizer 
+
+cd /Users/abdelwahab/3rd-year/s2/325/adaptive-huffman-coding/visualization            
+javac -d visualization visualization/SwingHuffmanVisualizer.java src/*.java
+java -cp .:../src SwingHuffmanVisualizer
+
+

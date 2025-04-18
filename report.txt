@@ -1,0 +1,372 @@
+# Adaptive Huffman Coding Project Report
+
+## 1. Project Overview
+
+This project implements an Adaptive Huffman Coding algorithm, which is a lossless data compression technique that builds the Huffman tree dynamically as data is processed. Unlike static Huffman coding, adaptive Huffman coding doesn't require two passes over the data, making it suitable for streaming applications where the entire data set isn't available upfront.
+
+The implementation includes:
+- A complete implementation of the FGK (Faller-Gallager-Knuth) algorithm for adaptive Huffman coding
+- A Java-based visualization tool that demonstrates both compression and decompression processes
+- Well-structured encoder and decoder classes for practical use
+
+## 2. Key Components
+
+### 2.1 Core Components
+
+1. **Node Class**: A tree node containing:
+   - Weight (frequency count)
+   - Symbol value (for leaf nodes)
+   - Parent and child pointers
+   - Order number for sibling property maintenance
+
+2. **HuffmanTree Class**: The main data structure that:
+   - Maintains the adaptive Huffman tree
+   - Handles node swapping to maintain the sibling property
+   - Provides path lookup for encoding/decoding
+   - Tracks the NYT (Not Yet Transmitted) node
+
+3. **Encoder Class**: Handles the compression process:
+   - Encodes symbols based on current tree state
+   - Uses bit-level output through BitOutputStream
+   - Updates the tree after each symbol
+
+4. **Decoder Class**: Handles the decompression process:
+   - Traverses the tree based on input bits
+   - Decodes symbols and reconstructs the original data
+   - Maintains an identical tree to the encoder
+
+5. **AdaptiveHuffman Class**: Ties everything together:
+   - Provides methods for compressing and decompressing files
+   - Calculates compression statistics
+
+### 2.2 Visualization Components
+
+1. **SwingHuffmanVisualizer**: Interactive visualization tool:
+   - Shows the adaptive tree structure in real-time
+   - Animates encoding and decoding processes
+   - Highlights node swaps and tree updates
+   - Displays compression statistics
+   - Supports step-by-step visualization
+
+2. **ConsoleTreeVisualizer**: Text-based tree visualization:
+   - Provides a simpler ASCII representation of the tree
+   - Useful for debugging purposes
+
+## 3. Algorithm Details
+
+### 3.1 FGK Algorithm
+
+The implementation follows the Faller-Gallager-Knuth (FGK) algorithm, which maintains the following properties:
+
+1. **Sibling Property**: Nodes are ordered by weight, with nodes of the same weight grouped together.
+
+2. **Order Numbers**: Each node has a unique order number that helps determine which node should be swapped when weights change.
+
+3. **Dynamic Tree Building**: The tree starts with just an NYT node and grows as new symbols are encountered.
+
+4. **Update Procedure**:
+   - When a symbol is encountered:
+     - If it's a new symbol: Add a new node pair (leaf + internal) replacing the NYT node
+     - If it's an existing symbol: Increment the weight of the corresponding leaf node
+   - Update weights and check for necessary swaps while traversing up the tree
+   - Maintain the sibling property by swapping nodes when required
+
+### 3.2 Compression Process
+
+1. For each symbol:
+   - Check if the symbol exists in the tree
+   - If it exists, output its path (sequence of 0's and 1's)
+   - If it doesn't exist, output the path to the NYT node followed by the symbol's ASCII bit representation
+   - Update the tree with this symbol (increase weights, perform swaps if needed)
+
+### 3.3 Decompression Process
+
+1. Start with an identical initial tree (just the NYT node)
+2. For each bit:
+   - Follow the path down the tree (0 = left, 1 = right)
+   - If a leaf node is reached, output its symbol
+   - If the NYT node is reached, read the next 8 bits as an ASCII symbol
+   - Update the tree identical to how the encoder did it
+   - Continue until the end of the bit stream
+
+## 4. Data Structures
+
+### 4.1 Huffman Tree
+
+- Implemented as a binary tree with parent and child pointers
+- Each internal node has exactly 0 or 2 children
+- Leaf nodes contain actual symbols
+- NYT node is a special leaf that represents not-yet-seen symbols
+
+### 4.2 Symbol-to-Node Map
+
+- HashMap for O(1) lookup of nodes by their symbol value
+- Crucial for quickly locating a symbol's node during encoding
+
+### 4.3 Bit Streams
+
+- BitOutputStream: Packs individual bits into bytes for file output
+- BitInputStream: Unpacks bytes into bits for decoding
+
+## 5. Flow of Execution
+
+### 5.1 Encoding Flow
+
+```
+Start with empty tree (just NYT node)
+For each symbol in input:
+    If symbol exists in tree:
+        Find symbol's node
+        Output the path (bits) from root to that node
+    Else:
+        Output path to NYT node
+        Output 8-bit ASCII representation of symbol
+    
+    Update tree:
+        If new symbol:
+            Split NYT node into internal node with:
+                - New NYT node as left child
+                - New symbol node as right child
+        Increment weights along path to root
+        Check for and perform necessary swaps
+```
+
+### 5.2 Decoding Flow
+
+```
+Start with empty tree (just NYT node)
+While there are bits to read:
+    Start at root
+    While current node is not a leaf:
+        Read a bit
+        If bit is 0, go to left child
+        If bit is 1, go to right child
+    
+    If current node is NYT:
+        Read next 8 bits as ASCII symbol
+        Output symbol
+    Else:
+        Output symbol of current node
+    
+    Update tree (identical to encoder)
+```
+
+## 6. Visualization Flow
+
+### 6.1 Encoding Visualization
+
+1. User inputs a string to encode
+2. For each character:
+   - Tree path is highlighted
+   - Bit output is shown
+   - Tree is updated (with animations for node swaps)
+   - Statistics are updated
+
+### 6.2 Decoding Visualization
+
+1. After encoding, switch to decoding mode
+2. For each bit sequence:
+   - Path through tree is highlighted
+   - Symbol is decoded
+   - Tree is updated (with animations)
+   - Output is shown and compared with original
+
+## 7. Performance Characteristics
+
+- **Time Complexity**:
+  - Encoding a symbol: O(log n) average case, where n is the number of unique symbols
+  - Decoding a symbol: O(h) where h is the height of the tree
+  - Tree update: O(log n) for swaps and weight updates
+
+- **Space Complexity**:
+  - Tree storage: O(k) where k is the number of unique symbols
+  - Overall: O(k) space complexity
+
+- **Compression Ratio**:
+  - Varies with input characteristics
+  - Most effective on inputs with high symbol redundancy
+  - Approaches entropy limit with enough data
+
+## 8. Flow Charts
+
+### 8.1 Encoding Process
+```
+┌───────────────┐
+│ Start Encoder │
+└───────┬───────┘
+        ▼
+┌───────────────┐
+│ Initialize    │
+│ Empty Tree    │
+└───────┬───────┘
+        ▼
+┌───────────────┐
+│ Read Symbol   │◄───────┐
+└───────┬───────┘        │
+        ▼                │
+┌───────────────┐        │
+│ Symbol in     │        │
+│ Tree?         │        │
+└───────┬───────┘        │
+        │                │
+    ┌───┴───┐            │
+Yes │       │ No         │
+    ▼       ▼            │
+┌─────────┐ ┌─────────┐  │
+│ Output  │ │ Output  │  │
+│ Path to │ │ Path to │  │
+│ Symbol  │ │ NYT     │  │
+└────┬────┘ └────┬────┘  │
+     │           │       │
+     │           ▼       │
+     │      ┌─────────┐  │
+     │      │ Output  │  │
+     │      │ ASCII   │  │
+     │      │ Bits    │  │
+     │      └────┬────┘  │
+     │           │       │
+     ▼           ▼       │
+┌───────────────────┐    │
+│ Update Tree       │    │
+└────────┬──────────┘    │
+         │               │
+         ▼               │
+┌───────────────────┐    │
+│ More Symbols?     │    │
+└────────┬──────────┘    │
+         │               │
+     ┌───┴───┐           │
+ Yes │       │ No        │
+     ▼       ▼           │
+┌─────────┐ ┌─────────┐  │
+│ Next    │ │ Done    │  │
+│ Symbol  │ └─────────┘  │
+└────┬────┘              │
+     │                   │
+     └───────────────────┘
+```
+
+### 8.2 Decoding Process
+```
+┌───────────────┐
+│ Start Decoder │
+└───────┬───────┘
+        ▼
+┌───────────────┐
+│ Initialize    │
+│ Empty Tree    │
+└───────┬───────┘
+        ▼
+┌───────────────┐
+│ Start at Root │◄───────┐
+└───────┬───────┘        │
+        ▼                │
+┌───────────────┐        │
+│ Current Node  │ Yes    │
+│ is Leaf?      ├───┐    │
+└───────┬───────┘   │    │
+        │ No        │    │
+        ▼           │    │
+┌───────────────┐   │    │
+│ Read Next Bit │   │    │
+└───────┬───────┘   │    │
+        ▼           │    │
+┌───────────────┐   │    │
+│ Bit is 0?     │   │    │
+└───────┬───────┘   │    │
+        │           │    │
+    ┌───┴───┐       │    │
+Yes │       │ No    │    │
+    ▼       ▼       │    │
+┌─────────┐ ┌─────────┐  │
+│ Go to   │ │ Go to   │  │
+│ Left    │ │ Right   │  │
+│ Child   │ │ Child   │  │
+└────┬────┘ └────┬────┘  │
+     │           │       │
+     └─────┬─────┘       │
+           ▼             │
+┌───────────────┐        │
+│ Current Node  │        │
+│ is NYT?       │        │
+└───────┬───────┘        │
+        │                │
+    ┌───┴───┐            │
+Yes │       │ No         │
+    ▼       ▼            │
+┌─────────┐ ┌─────────┐  │
+│ Read 8  │ │ Output  │  │
+│ ASCII   │ │ Node's  │  │
+│ Bits    │ │ Symbol  │  │
+└────┬────┘ └────┬────┘  │
+     │           │       │
+     ▼           │       │
+┌─────────┐      │       │
+│ Output  │      │       │
+│ Symbol  │      │       │
+└────┬────┘      │       │
+     │           │       │
+     └─────┬─────┘       │
+           ▼             │
+┌───────────────────┐    │
+│ Update Tree       │    │
+└────────┬──────────┘    │
+         │               │
+         ▼               │
+┌───────────────────┐    │
+│ More Bits?        │    │
+└────────┬──────────┘    │
+         │               │
+     ┌───┴───┐           │
+ Yes │       │ No        │
+     ▼       ▼           │
+┌─────────┐ ┌─────────┐  │
+│ Next    │ │ Done    │  │
+│ Bit     │ └─────────┘  │
+└────┬────┘              │
+     │                   │
+     └───────────────────┘
+```
+
+## 9. Usage Examples
+
+### 9.1 Command Line Usage
+
+```
+# Compression
+java AdaptiveHuffman compress input.txt compressed.bin
+
+# Decompression
+java AdaptiveHuffman decompress compressed.bin output.txt
+
+# Analysis
+java AdaptiveHuffman analyze original.txt compressed.bin
+```
+
+### 9.2 Visualization Usage
+
+1. Run the visualizer: `java SwingHuffmanVisualizer`
+2. Enter a string to encode in the input field
+3. Use "Encode Step" to visualize one step at a time or "Encode All" to run the full encoding
+4. Switch to decompression mode to visualize the decoding process
+5. Adjust animation speed as needed
+6. Use "Reset" to start over with a new input
+
+## 10. Conclusion
+
+This adaptive Huffman coding implementation showcases the dynamic nature of the algorithm. The visualization tools provide a clear understanding of how the tree evolves during compression and decompression. The project demonstrates several important concepts:
+
+1. Adaptive data compression without requiring prior knowledge of frequencies
+2. Binary tree operations and manipulations
+3. Bit-level I/O operations
+4. Real-time visualization of algorithmic processes
+
+The implementation is efficient for small to medium-sized inputs and serves as an excellent educational tool for understanding adaptive compression algorithms.
+
+## 11. Future Improvements
+
+1. Implement additional adaptive compression variants (e.g., Vitter algorithm)
+2. Add support for larger files with optimized data structures
+3. Enhance visualization with more detailed statistics
+4. Create comparison benchmarks with other compression methods
+5. Develop a web-based version of the visualization tool
